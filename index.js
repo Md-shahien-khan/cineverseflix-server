@@ -1,7 +1,7 @@
 const express = require('express'); 
 const cors = require('cors'); 
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express(); 
 const port = process.env.PORT || 5000;  
 
@@ -33,6 +33,9 @@ async function run() {
     // collection 
     const movieCollection = client.db('movieDB').collection('movie');
 
+    // collection user
+    const userCollection = client.db('movieDB').collection('users');
+
     // read
     app.get('/movies', async(req, res) =>{
         const cursor = movieCollection.find();
@@ -47,8 +50,24 @@ async function run() {
         console.log(newMovie);
         const result = await movieCollection.insertOne(newMovie);
         res.send(result);
-    })
+    });
 
+    // get api for movie details in client side
+    app.get('/movies/:id', async(req , res) =>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result =  await movieCollection.findOne(query);
+        res.send(result);
+    });
+
+
+    // users related api
+    app.post('/users', async(req, res) =>{
+        const newUser = req.body;
+        console.log('creating new user', newUser);
+        const result = await userCollection.insertOne(newUser);
+        res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
