@@ -34,7 +34,11 @@ async function run() {
     const movieCollection = client.db('movieDB').collection('movie');
 
     // read
-     
+    app.get('/movies', async(req, res) =>{
+        const cursor = movieCollection.find();
+        const result = await cursor.toArray();
+        res.send(result);
+    });
 
 
     // create - post
