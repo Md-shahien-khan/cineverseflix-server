@@ -36,6 +36,34 @@ async function run() {
     // collection user
     const userCollection = client.db('movieDB').collection('users');
 
+   // New collection for favorites
+    const favoritesCollection = client.db('movieDB').collection('favorites');
+
+ 
+    // favorite movie related
+    // app.post('/movies/:id', async (req, res) => {
+    //     const { title, description } = req.body;
+    //     const newFavorite = new Favorite({ title, description });  
+    //     await newFavorite.save(); 
+    //     res.json(newFavorite);  
+    //   });
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // read
     app.get('/movies', async(req, res) =>{
         const cursor = movieCollection.find();
@@ -59,6 +87,24 @@ async function run() {
         const result =  await movieCollection.findOne(query);
         res.send(result);
     });
+
+    // delete operation
+    app.delete('/movies/:id', async(req, res) =>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await movieCollection.deleteOne(query);
+        res.send(result);
+    })
+
+
+
+
+
+
+
+
+
+
 
     // get users
     app.get('/users', async(req, res) =>{
