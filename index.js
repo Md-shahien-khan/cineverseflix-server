@@ -27,6 +27,9 @@ async function run() {
     const userCollection = client.db('movieDB').collection('users');
     const favoritesCollection = client.db('movieDB').collection('favorites');
 
+
+
+    // FAvorite Movie Database
     // Insert favorite movie
     app.post('/favMovies', async (req, res) => {
       const newFavMovie = req.body;
@@ -54,6 +57,10 @@ async function run() {
 
 
 
+
+
+
+    // Movies database
     // Get all movies
     app.get('/movies', async (req, res) => {
       const cursor = movieCollection.find();
@@ -77,6 +84,30 @@ async function run() {
       res.send(result);
     });
 
+    // movie update
+    app.put('/movies/:id', async(req, res) => {
+      const id = req.params.id;
+      const filter = {_id : new ObjectId(id)};
+      const options = { upsert : true };
+      const updatedMovieDetails = req.body;
+      const updatedMovie = {
+        $set : {
+          imageUrl : updatedMovieDetails.imageUrl,
+          title : updatedMovieDetails.title, 
+          genres : updatedMovieDetails.genres, 
+          director : updatedMovieDetails.director, 
+          duration : updatedMovieDetails.duration, 
+          releaseDate : updatedMovieDetails.releaseDate, 
+          earned : updatedMovieDetails.earned, 
+          rating : updatedMovieDetails.rating, 
+          summary : updatedMovieDetails.summary, 
+          movieWebsite : updatedMovieDetails.movieWebsite
+        }
+      }
+      const result = await movieCollection.updateOne(filter, updatedMovie, options);
+      res.send(result);
+     })
+
     // Delete movie by id
     app.delete('/movies/:id', async (req, res) => {
       const id = req.params.id;
@@ -85,6 +116,12 @@ async function run() {
       res.send(result);
     });
 
+
+
+
+
+
+    // Users Database
     // Users CRUD operations
     app.get('/users', async (req, res) => {
       const cursor = userCollection.find();
