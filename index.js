@@ -44,6 +44,16 @@ async function run() {
       res.send(result);  // Return the full movie objects
     });
 
+    app.delete('/favMovies/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await favoritesCollection.deleteOne(query);
+        res.send(result);
+        // console.log(id);
+    });
+
+
+
     // Get all movies
     app.get('/movies', async (req, res) => {
       const cursor = movieCollection.find();
