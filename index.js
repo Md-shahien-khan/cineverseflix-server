@@ -5,17 +5,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express(); 
 const port = process.env.PORT || 5000;  
 
-
-
 app.use(cors()); 
 app.use(express.json());   
 
-
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5uoh0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 console.log(uri);
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -27,117 +21,86 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    // collection 
     const movieCollection = client.db('movieDB').collection('movie');
-
-    // collection user
     const userCollection = client.db('movieDB').collection('users');
-
-   // New collection for favorites
     const favoritesCollection = client.db('movieDB').collection('favorites');
 
- 
-    // favorite movie related
-    // app.post('/movies/:id', async (req, res) => {
-    //     const { title, description } = req.body;
-    //     const newFavorite = new Favorite({ title, description });  
-    //     await newFavorite.save(); 
-    //     res.json(newFavorite);  
-    //   });
-
+    // Insert favorite movie
+    app.post('/favMovies', async (req, res) => {
+      const newFavMovie = req.body;
+      console.log("Received movie:", newFavMovie); // Log the movie data
+      const result = await favoritesCollection.insertOne(newFavMovie);
+      console.log("Inserted movie result:", result); // Log the result of insertion
+      res.send(result);
+    });
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // read
-    app.get('/movies', async(req, res) =>{
-        const cursor = movieCollection.find();
-        const result = await cursor.toArray();
-        res.send(result);
+    // Get favorite movies
+    app.get('/favMovies', async (req, res) => {
+      const cursor = favoritesCollection.find();
+      const result = await cursor.toArray();
+      console.log("Favorites:", result);  // Log the full favorite movies data
+      res.send(result);  // Return the full movie objects
     });
 
-
-    // create - post
-    app.post('/movies', async(req, res) => {
-        const newMovie = req.body;
-        console.log(newMovie);
-        const result = await movieCollection.insertOne(newMovie);
-        res.send(result);
+    // Get all movies
+    app.get('/movies', async (req, res) => {
+      const cursor = movieCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
-    // get api for movie details in client side
-    app.get('/movies/:id', async(req , res) =>{
-        const id = req.params.id;
-        const query = {_id: new ObjectId(id)};
-        const result =  await movieCollection.findOne(query);
-        res.send(result);
+    // Insert new movie
+    app.post('/movies', async (req, res) => {
+      const newMovie = req.body;
+      console.log("Inserting movie:", newMovie);  // Log the movie data
+      const result = await movieCollection.insertOne(newMovie);
+      res.send(result);
     });
 
-    // delete operation
-    app.delete('/movies/:id', async(req, res) =>{
-        const id = req.params.id;
-        const query = {_id: new ObjectId(id)};
-        const result = await movieCollection.deleteOne(query);
-        res.send(result);
-    })
-
-
-
-
-
-
-
-
-
-
-
-    // get users
-    app.get('/users', async(req, res) =>{
-        const cursor = userCollection.find();
-        const result = await cursor.toArray();
-        res.send(result);
-    })
-    // users related api
-    app.post('/users', async(req, res) =>{
-        const newUser = req.body;
-        console.log('creating new user', newUser);
-        const result = await userCollection.insertOne(newUser);
-        res.send(result);
+    // Get movie details by id
+    app.get('/movies/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await movieCollection.findOne(query);
+      res.send(result);
     });
 
-    app.patch('/users', async(req, res) =>{
-        const email = req.body.email;
-        const filter = { email }
-        const updatedDoc = {
-            $set : {
-                lastSignInTime : req.body?.lastSignInTime
-            }
-        };
-        const result = await userCollection.updateOne(filter, updatedDoc);
-        res.send(result);
-    })
+    // Delete movie by id
+    app.delete('/movies/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await movieCollection.deleteOne(query);
+      res.send(result);
+    });
 
-    // delete user
-    app.delete('/users/:id', async(req, res) =>{
-        const id = req.params.id;
-        const query = {_id: new ObjectId(id)};
-        const result = await userCollection.deleteOne(query);
-        res.send(result);
+    // Users CRUD operations
+    app.get('/users', async (req, res) => {
+      const cursor = userCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post('/users', async (req, res) => {
+      const newUser = req.body;
+      const result = await userCollection.insertOne(newUser);
+      res.send(result);
+    });
+
+    app.patch('/users', async (req, res) => {
+      const email = req.body.email;
+      const filter = { email };
+      const updatedDoc = { $set: { lastSignInTime: req.body?.lastSignInTime } };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    app.delete('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
@@ -148,12 +111,13 @@ async function run() {
     // await client.close();
   }
 }
+
 run().catch(console.dir);
 
-
 app.get('/', (req, res) => {     
-    res.send('Cineverse flix movie server is running'); });  
+    res.send('Cineverse flix movie server is running'); 
+});
 
-app.listen(port, () =>{
-    console.log(`Cine verse flix is running on port ${port}`)
+app.listen(port, () => {
+    console.log(`Cineverse flix is running on port ${port}`)
 });
